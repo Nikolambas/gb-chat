@@ -1,0 +1,18 @@
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<VBox fx:controller="ru.gb.client.Controller" xmlns:fx="http://javafx.com/fxml" spacing="5">
+    <HBox fx:id="loginBox" spacing="5" VBox.vgrow="ALWAYS">
+        <TextField fx:id="loginField" promptText="Login"/>
+        <PasswordField fx:id="passwordField" promptText="Password"/>
+        <Button text="Auth" defaultButton="true" onAction="#btnAuthClick"/>
+    </HBox>
+    <TextArea fx:id="textArea" VBox.vgrow="ALWAYS" visible="false"/>
+    <HBox fx:id="messageBox" spacing="5" visible="false">
+        <TextField fx:id="textField" HBox.hgrow="ALWAYS"/>
+        <Button text="Send" defaultButton="true" onAction="#btnSendClick"/>
+    </HBox>
+</VBox>
