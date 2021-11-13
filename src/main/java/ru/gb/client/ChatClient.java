@@ -4,6 +4,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.List;
 
 public class ChatClient {
 
@@ -11,12 +13,10 @@ public class ChatClient {
     private DataInputStream in;
     private DataOutputStream out;
 
-
     private final Controller controller;
 
     public ChatClient(Controller controller) {
         this.controller = controller;
-        openConnection();
     }
 
     public void openConnection() {
@@ -39,9 +39,16 @@ public class ChatClient {
                     while (true) {
                         final String message = in.readUTF();
                         System.out.println("Receive message: " + message);
-                        if ("/end".equals(message)) {
-                            controller.setAuth(false);
-                            break;
+                        if (message.startsWith("/")) {
+                            if ("/end".equals(message)) {
+                                controller.setAuth(false);
+                                break;
+                            }
+                            if (message.startsWith("/clients")) { // /clients nick1 nick0
+                                final String[] tokens = message.replace("/clients ", "").split(" ");
+                                final List<String> clients = Arrays.asList(tokens);
+                                controller.updateClientList(clients);
+                            }
                         }
                         controller.addMessage(message);
                     }

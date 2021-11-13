@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class ClientHandler {
+    private static final String COMMAND_PREFIX = "/";
+    private static final String SEND_MESSAGE_TO_CLIENT_COMMAND = COMMAND_PREFIX + "w";
+    private static final String END_COMMAND = COMMAND_PREFIX + "end";
     private final Socket socket;
     private final ChatServer server;
     private final DataInputStream in;
@@ -104,8 +107,16 @@ public class ClientHandler {
             while (true) {
                 final String msg = in.readUTF();
                 System.out.println("Receive message: " + msg);
-                if ("/end".equals(msg)) {
-                    break;
+                if (msg.startsWith(COMMAND_PREFIX)) {
+                    if (END_COMMAND.equals(msg)) {
+                        break;
+                    }
+                    if (msg.startsWith(SEND_MESSAGE_TO_CLIENT_COMMAND)) { // /w nick1 dkfjslkfj dskj
+                        final String[] token = msg.split(" ");
+                        final String nick = token[1];
+                        server.sendMessageToClient(this, nick, msg.substring(SEND_MESSAGE_TO_CLIENT_COMMAND.length() + 2 + nick.length()));
+                    }
+                    continue;
                 }
                 server.broadcast(nick + ": " + msg);
             }
