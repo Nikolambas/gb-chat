@@ -26,7 +26,9 @@ public class ClientHandler {
             new Thread(() -> {
                 try {
                     authenticate();
-                    readMessages();
+                    if (!socket.isClosed()){
+                        readMessages();
+                    }
                 } finally {
                     closeConnection();
                 }
@@ -64,7 +66,19 @@ public class ClientHandler {
     }
 
     private void authenticate() {
-        while (true) {
+        final boolean[] connect = {true};
+        new Thread(() -> {
+            try {
+                Thread.sleep(120000);
+                if (nick.equals("")){
+                    connect[0] = false;
+                    closeConnection();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }).start();
+        while (connect[0]) {
             try {
                 final String str = in.readUTF();
                 if (str.startsWith("/auth")) {
