@@ -4,11 +4,13 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.sql.SQLException;
 
 public class ClientHandler {
     private static final String COMMAND_PREFIX = "/";
     private static final String SEND_MESSAGE_TO_CLIENT_COMMAND = COMMAND_PREFIX + "w";
     private static final String END_COMMAND = COMMAND_PREFIX + "end";
+    private static final String UPDATE_NICK = COMMAND_PREFIX + "upd";
     private final Socket socket;
     private final ChatServer server;
     private final DataInputStream in;
@@ -129,6 +131,19 @@ public class ClientHandler {
                         final String[] token = msg.split(" ");
                         final String nick = token[1];
                         server.sendMessageToClient(this, nick, msg.substring(SEND_MESSAGE_TO_CLIENT_COMMAND.length() + 2 + nick.length()));
+                    }
+                    if (msg.startsWith(UPDATE_NICK)){           // /upd nick1
+                        String[]strings=msg.split(" ");
+                        String newNick=strings[1];
+                        if (strings.length==2){
+                            try {
+                                server.getAuthService().updateTable(nick,newNick);
+                                sendMessage("/upd "+ newNick+" "+nick);
+                                this.nick = newNick;
+                            } catch (SQLException throwables) {
+                                throwables.printStackTrace();
+                            }
+                        }
                     }
                     continue;
                 }

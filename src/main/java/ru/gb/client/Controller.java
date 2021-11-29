@@ -14,7 +14,7 @@ import javafx.scene.layout.HBox;
 public class Controller {
 
     @FXML
-    public ListView<String> clientList;
+    public ListView <String> clientList;
     @FXML
     private HBox messageBox;
     @FXML
