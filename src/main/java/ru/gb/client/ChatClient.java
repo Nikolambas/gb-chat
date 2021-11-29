@@ -15,6 +15,7 @@ public class ChatClient {
 
     private final Controller controller;
 
+
     public ChatClient(Controller controller) {
         this.controller = controller;
     }
@@ -46,8 +47,13 @@ public class ChatClient {
                             }
                             if (message.startsWith("/clients")) { // /clients nick1 nick0
                                 final String[] tokens = message.replace("/clients ", "").split(" ");
-                                final List<String> clients = Arrays.asList(tokens);
+                                List<String> clients = Arrays.asList(tokens);
                                 controller.updateClientList(clients);
+                            }
+                            if (message.startsWith("/upd")) {       // /upd newNick nick
+                                final String[] tokens = message.replace("/upd ", "").split(" ");
+                                controller.clientList.getItems().remove(tokens[1]);
+                                controller.clientList.getItems().add(tokens[0]);
                             }
                         }
                         controller.addMessage(message);

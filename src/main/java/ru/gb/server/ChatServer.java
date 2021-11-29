@@ -57,6 +57,7 @@ public class ChatServer {
         from.sendMessage("Участника с ником " + nickTo + " нет в чат-комнате");
     }
 
+
     public void broadcastClientsList() {
         StringBuilder clientsCommand = new StringBuilder("/clients ");
         for (ClientHandler client : clients.values()) {
