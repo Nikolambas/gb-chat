@@ -102,6 +102,14 @@ public class ClientHandler {
                         if (!file.exists()){
                             file.createNewFile();
                         }
+                        BufferedReader bw = new BufferedReader(new FileReader("history_"+login+".txt"));
+                        int count = 100;
+                        String msg;
+                        while ((msg = bw.readLine())!=null&&count!=0){
+                            sendMessage(msg);
+                            count--;
+                        }
+                        bw.close();
                         server.subscribe(this);
                         break;
                     } else {

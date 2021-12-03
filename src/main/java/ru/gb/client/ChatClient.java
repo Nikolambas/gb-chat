@@ -33,14 +33,6 @@ public class ChatClient {
                             final String login = split[2];
                             controller.addMessage("Успешная авторизация под ником " + nick);
                             controller.setAuth(true);
-                            BufferedReader bw =new  BufferedReader(new FileReader("history_"+login+".txt"));
-                            int count = 100;
-                            String msg;
-                            while ((msg = bw.readLine())!=null&&count!=0){
-                                controller.addMessage(msg);
-                                count--;
-                            }
-                            bw.close();
                             break;
                         }
                     }
