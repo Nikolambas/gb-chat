@@ -136,9 +136,10 @@ public class ClientHandler {
         try {
             while (true) {
                 final String msg = in.readUTF();
-                try(BufferedWriter bw = new BufferedWriter(new FileWriter("history_"+login+".txt"))) {
-                    bw.write(msg);
-                }
+                BufferedWriter bw = new BufferedWriter(new FileWriter("history_"+login+".txt",true));
+                bw.write("\n"+msg);
+                bw.flush();
+
                 System.out.println("Receive message: " + msg);
                 if (msg.startsWith(COMMAND_PREFIX)) {
                     if (END_COMMAND.equals(msg)) {
