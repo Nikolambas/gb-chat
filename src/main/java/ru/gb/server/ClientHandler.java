@@ -3,6 +3,9 @@ package ru.gb.server;
 import java.io.*;
 import java.net.Socket;
 import java.sql.SQLException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ClientHandler {
     private static final String COMMAND_PREFIX = "/";
@@ -23,8 +26,8 @@ public class ClientHandler {
             this.server = server;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
-
-            new Thread(() -> {
+            ExecutorService executorService = Executors.newFixedThreadPool(10);
+            executorService.execute(() -> {
                 try {
                     authenticate();
                     if (!socket.isClosed()){
@@ -33,7 +36,8 @@ public class ClientHandler {
                 } finally {
                     closeConnection();
                 }
-            }).start();
+            });
+            executorService.shutdown();
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -67,19 +71,22 @@ public class ClientHandler {
     }
 
     private void authenticate() {
-        final boolean[] connect = {true};
-        new Thread(() -> {
+        AtomicBoolean connect = new AtomicBoolean();
+        connect.set(true);
+        ExecutorService es = Executors.newSingleThreadExecutor();
+        es.execute(() -> {
             try {
                 Thread.sleep(120000);
-                if (nick.equals("")){
-                    connect[0] = false;
-                    closeConnection();
+                if (nick.equals("")) {
+                    connect.set(false);
+                    ClientHandler.this.closeConnection();
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }).start();
-        while (connect[0]) {
+        });
+        es.shutdown();
+        while (connect.get()) {
             try {
                 final String str = in.readUTF();
                 if (str.startsWith("/auth")) {
