@@ -1,8 +1,6 @@
 package ru.gb.server;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.sql.SQLException;
 
@@ -16,6 +14,7 @@ public class ClientHandler {
     private final DataInputStream in;
     private final DataOutputStream out;
     private String nick;
+    private String login;
 
     public ClientHandler(Socket socket, ChatServer server) {
         try {
@@ -93,9 +92,24 @@ public class ClientHandler {
                             sendMessage("Пользователь уже авторизован");
                             continue;
                         }
-                        sendMessage("/authok " + nick);
+                        sendMessage("/authok " + nick + " " + login);
                         this.nick = nick;
+                        this.login=login;
                         server.broadcast("Пользователь " + nick + " зашел в чат");
+                        String fileName = "C:"+File.separator+"Program Files"+File.separator+"apache-maven-3.6.3-src"+
+                                File.separator+"gb-chat"+File.separator+"history_"+login+".txt";
+                        File file = new File(fileName);
+                        if (!file.exists()){
+                            file.createNewFile();
+                        }
+                        BufferedReader bw = new BufferedReader(new FileReader("history_"+login+".txt"));
+                        int count = 100;
+                        String msg;
+                        while ((msg = bw.readLine())!=null&&count!=0){
+                            sendMessage(msg);
+                            count--;
+                        }
+                        bw.close();
                         server.subscribe(this);
                         break;
                     } else {
@@ -122,6 +136,10 @@ public class ClientHandler {
         try {
             while (true) {
                 final String msg = in.readUTF();
+                BufferedWriter bw = new BufferedWriter(new FileWriter("history_"+login+".txt",true));
+                bw.write("\n"+msg);
+                bw.flush();
+
                 System.out.println("Receive message: " + msg);
                 if (msg.startsWith(COMMAND_PREFIX)) {
                     if (END_COMMAND.equals(msg)) {
