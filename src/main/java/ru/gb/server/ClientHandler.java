@@ -26,7 +26,7 @@ public class ClientHandler {
             this.server = server;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
-            ExecutorService executorService = Executors.newFixedThreadPool(10);
+            ExecutorService executorService = Executors.newSingleThreadExecutor();
             executorService.execute(() -> {
                 try {
                     authenticate();
