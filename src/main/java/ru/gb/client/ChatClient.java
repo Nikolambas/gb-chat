@@ -1,8 +1,6 @@
 package ru.gb.client;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +30,7 @@ public class ChatClient {
                         if (msgAuth.startsWith("/authok")) {
                             final String[] split = msgAuth.split(" ");
                             final String nick = split[1];
+                            final String login = split[2];
                             controller.addMessage("Успешная авторизация под ником " + nick);
                             controller.setAuth(true);
                             break;
