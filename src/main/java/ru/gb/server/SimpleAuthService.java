@@ -14,9 +14,6 @@ public class SimpleAuthService implements AuthService {
 
     public SimpleAuthService() {
         users = new ArrayList<>();
-//        for (int i = 0; i < 5; i++) {
-//            users.add(new UserData("login" + i, "pass" + i, "nick" + i));
-//        }
 
         try {
             connect();
@@ -70,7 +67,12 @@ public class SimpleAuthService implements AuthService {
 
     @Override
     public void updateTable(String name,String newName) throws SQLException {
-        statement.executeUpdate("UPDATE users SET name ='"+newName+"' WHERE name='"+name+"';");
+        try(PreparedStatement ps = connection.prepareStatement(
+            "UPDATE users SET name = ? WHERE name= ?;")){
+           ps.setString(1,newName);
+           ps.setString(2,name);
+           ps.executeUpdate();
+        }
     }
 
     private void insertIntoTable(UserData userData) throws SQLException {
