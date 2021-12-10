@@ -1,15 +1,23 @@
 package ru.gb.server;
 
+import jdk.nashorn.internal.runtime.Context;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ChatServer {
 
     private final AuthService authService;
     private final Map<String, ClientHandler> clients;
+    static Logger logger = LogManager.getLogger(ChatServer.class.getName());
+
 
     public ChatServer() {
         this.authService = new SimpleAuthService();
@@ -19,13 +27,13 @@ public class ChatServer {
     public void run() {
         try (ServerSocket serverSocket = new ServerSocket(8189)) {
             while (true) {
-                System.out.println("Wait client connection...");
+                logger.info("Wait client connection...");
                 final Socket socket = serverSocket.accept();
                 new ClientHandler(socket, this);
-                System.out.println("Client connected");
+                logger.info("Client connected");
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 

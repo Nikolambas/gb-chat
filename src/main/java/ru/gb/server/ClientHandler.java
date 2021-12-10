@@ -1,5 +1,8 @@
 package ru.gb.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.*;
 import java.net.Socket;
 import java.sql.SQLException;
@@ -18,6 +21,8 @@ public class ClientHandler {
     private final DataOutputStream out;
     private String nick;
     private String login;
+    static Logger logger = LogManager.getLogger(ClientHandler.class.getName());
+    ExecutorService executorService;
 
     public ClientHandler(Socket socket, ChatServer server) {
         try {
@@ -26,21 +31,23 @@ public class ClientHandler {
             this.server = server;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
-            ExecutorService executorService = Executors.newSingleThreadExecutor();
+            executorService = Executors.newSingleThreadExecutor();
             executorService.execute(() -> {
                 try {
                     authenticate();
+                    logger.info("Клиент подключился");
                     if (!socket.isClosed()){
                         readMessages();
                     }
                 } finally {
                     closeConnection();
+                    logger.info("Клиент отключился");
                 }
             });
             executorService.shutdown();
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw  new RuntimeException();
         }
 
     }
@@ -51,14 +58,14 @@ public class ClientHandler {
                 in.close();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
         try {
             if (out != null) {
                 out.close();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
         try {
             if (socket != null) {
@@ -66,26 +73,27 @@ public class ClientHandler {
                 socket.close();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 
     private void authenticate() {
         AtomicBoolean connect = new AtomicBoolean();
         connect.set(true);
-        ExecutorService es = Executors.newSingleThreadExecutor();
-        es.execute(() -> {
+        executorService = Executors.newSingleThreadExecutor();
+        executorService.execute(() -> {
             try {
                 Thread.sleep(120000);
                 if (nick.equals("")) {
                     connect.set(false);
                     ClientHandler.this.closeConnection();
+                    logger.info("Пользователь не успел авторизоваться");
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.error(e);
             }
         });
-        es.shutdown();
+        executorService.shutdown();
         while (connect.get()) {
             try {
                 final String str = in.readUTF();
@@ -117,6 +125,7 @@ public class ClientHandler {
                             count--;
                         }
                         bw.close();
+                        logger.info("Пользователю "+nick+" загрузили историю переписки");
                         server.subscribe(this);
                         break;
                     } else {
@@ -132,10 +141,10 @@ public class ClientHandler {
 
     public void sendMessage(String message) {
         try {
-            System.out.println("SERVER: Send message to " + nick);
+            logger.info("SERVER: Send message to " + nick);
             out.writeUTF(message);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 
@@ -146,8 +155,7 @@ public class ClientHandler {
                 BufferedWriter bw = new BufferedWriter(new FileWriter("history_"+login+".txt",true));
                 bw.write("\n"+msg);
                 bw.flush();
-
-                System.out.println("Receive message: " + msg);
+                logger.info("Receive message: " + msg);
                 if (msg.startsWith(COMMAND_PREFIX)) {
                     if (END_COMMAND.equals(msg)) {
                         break;
@@ -156,6 +164,7 @@ public class ClientHandler {
                         final String[] token = msg.split(" ");
                         final String nick = token[1];
                         server.sendMessageToClient(this, nick, msg.substring(SEND_MESSAGE_TO_CLIENT_COMMAND.length() + 2 + nick.length()));
+                        logger.info("Пользователь "+nick+" вышел из чата");
                     }
                     if (msg.startsWith(UPDATE_NICK)){           // /upd nick1
                         String[]strings=msg.split(" ");
@@ -165,8 +174,9 @@ public class ClientHandler {
                                 server.getAuthService().updateTable(nick,newNick);
                                 sendMessage("/upd "+ newNick+" "+nick);
                                 this.nick = newNick;
+                                logger.info("Пользователь "+nick+" поменял ник на "+newNick);
                             } catch (SQLException throwables) {
-                                throwables.printStackTrace();
+                                logger.error(throwables);
                             }
                         }
                     }
@@ -175,7 +185,7 @@ public class ClientHandler {
                 server.broadcast(nick + ": " + msg);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 
