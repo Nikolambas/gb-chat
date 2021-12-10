@@ -1,5 +1,8 @@
 package ru.gb.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,26 +11,26 @@ public class SimpleAuthService implements AuthService {
 
     private Connection connection;
     private Statement statement;
-
-
+    Logger logger = LogManager.getLogger(SimpleAuthService.class.getName());
     private  List<UserData> users;
 
     public SimpleAuthService() {
         users = new ArrayList<>();
-
         try {
             connect();
             createTable();
             setArray(users);
+            logger.info("Подключились базы данных");
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error(e);
         }finally {
             try {
                 if (connection.isClosed()){
+                    logger.info("Базы данных отключились");
                     disconnect();
                 }
             } catch (SQLException throwables) {
-                throwables.printStackTrace();
+                logger.error(throwables);
             }
         }
 
@@ -47,14 +50,14 @@ public class SimpleAuthService implements AuthService {
             try {
                 statement.close();
             } catch (SQLException throwables) {
-                throwables.printStackTrace();
+                logger.error(throwables);
             }
         }
         if (connection!=null){
             try {
                 connection.close();
             } catch (SQLException throwables) {
-                throwables.printStackTrace();
+                logger.error(throwables);
             }
         }
     }
